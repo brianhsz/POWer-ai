@@ -1,12 +1,11 @@
 import cv2 as cv
 import argparse
+import pyfirmata
+import StepperLib
 
 from ultralytics import YOLO
-import pyfirmata
-from pyfirmata import Arduino, SERVO
+from pyfirmata import Arduino
 from time import sleep
-import StepperLib
-import math
 
 
 def get_args():
@@ -104,7 +103,6 @@ def get_shot_angle(distance):
 def point_to_can(x_pos,dist):
     # implement this later
     DEGREE_TO_STEP_CONV = (2038 * 2) / 360
-    board = Arduino('COM3')
     reader = pyfirmata.util.Iterator(board)  # reads inputs of the circuit
     reader.start()
 
@@ -117,5 +115,6 @@ def point_to_can(x_pos,dist):
     return True
 
 
+# board = Arduino('COM3')
 main()
 

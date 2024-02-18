@@ -9,16 +9,16 @@ class Stepper():
         self.pin_3 = board.get_pin('d:%s:o' % (pin_3))
         self.pin_4 = board.get_pin('d:%s:o' % (pin_4))
 
-        self.step_number = 0 #what number of steps are going to be turned
+        self.step_number = 0
         self.direction = 0
-        self.total_steps = total_steps #total number of steps per revolution
-        self.step_delay = 0 #time delay between steps
+        self.total_steps = total_steps
+        self.step_delay = 0
+
 
     def set_speed(self, what_speed):
         self.step_delay = (self.total_steps / (1000000* what_speed))
 
     def step(self, steps_to_move):
-        #sets forward and backward
         if steps_to_move > 0:
             self.direction = 1
         if steps_to_move < 0:
@@ -42,6 +42,7 @@ class Stepper():
             steps_left -= 1
 
             self.step_motor(self.step_number % 8)
+
 
     def step_motor(self, this_step):
         if this_step == 0:
