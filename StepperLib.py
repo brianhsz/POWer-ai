@@ -2,7 +2,6 @@ from time import sleep
 
 
 class Stepper():
-
     def __init__(self, total_steps, board, reader, pin_1, pin_2, pin_3, pin_4):
         self.pin_1 = board.get_pin('d:%s:o' % (pin_1))
         self.pin_2 = board.get_pin('d:%s:o' % (pin_2))
@@ -13,7 +12,6 @@ class Stepper():
         self.direction = 0
         self.total_steps = total_steps
         self.step_delay = 0
-
 
     def set_speed(self, what_speed):
         self.step_delay = (self.total_steps / (1000000* what_speed))
@@ -42,7 +40,6 @@ class Stepper():
             steps_left -= 1
 
             self.step_motor(self.step_number % 8)
-
 
     def step_motor(self, this_step):
         if this_step == 0:

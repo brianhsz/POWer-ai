@@ -37,9 +37,10 @@ def distance_to_camera(known_width, focal_length, per_width):
 
 
 def main():
-    # THIS IS WHAT YOU WANNA HIT ##########
+    # THIS IS WHAT YOU WANNA HIT #######################################################
     wanna_hit = "Zoa"
 
+    # CONSTANTS ########################################################################
     CALIBRATED_FOCAL_LENGTH = 245
     KNOWN_WIDTH = 35.0
 
@@ -50,6 +51,7 @@ def main():
     cap_width = args.width
     cap_height = args.height
 
+    # Classification and AI Detection ##################################################
     # Load an official or custom model
     model = YOLO('best.pt')  # Load an official Detect model
 
@@ -58,15 +60,15 @@ def main():
     cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
 
-    classifications = {0: 'sevenUp',
+    classifications = {0: 'SevenUp',
                        1: 'DrPepper',
                        2: 'Pepsi',
                        3: 'Zoa'}
     lockin = False
-
     width = cap.get(cv.CV_CAP_PROP_FRAME_WIDTH)
     print("THE WIDTH IS: " + str(width))
 
+    # Main #############################################################################
     while True:
         ret, image = cap.read()
         if not ret:
@@ -94,7 +96,7 @@ def main():
 
         annotated_frame = results[0].plot()
 
-        cv.imshow('distance detection', annotated_frame)
+        cv.imshow('Distance Detection', annotated_frame)
 
     cv.destroyAllWindows()
 
