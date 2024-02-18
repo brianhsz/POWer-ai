@@ -8,7 +8,6 @@ import StepperLib
 from ultralytics import YOLO
 from pyfirmata import Arduino, SERVO
 from time import sleep
-from taipy import Gui
 
 
 def get_args():
@@ -41,7 +40,7 @@ def main():
     # THIS IS WHAT YOU WANNA HIT ##########
     wanna_hit = "Zoa"
 
-    CALIBRATED_FOCAL_LENGTH = 230
+    CALIBRATED_FOCAL_LENGTH = 245
     KNOWN_WIDTH = 35.0
 
     # Argument parsing #################################################################
@@ -65,29 +64,31 @@ def main():
                        3: 'Zoa'}
     lockin = False
 
+    width = cap.get(cv.CV_CAP_PROP_FRAME_WIDTH)
+    print("THE WIDTH IS: " + str(width))
+
     while True:
         ret, image = cap.read()
         if not ret:
             break
-        # img = cv.flip(image, 1)  # Mirror display
 
         # DETECTION #
-        results = model.predict(image, conf=0.5, imgsz = 640, verbose=False, half=True)
+        results = model.predict(image, conf=0.5, imgsz=640, verbose=False, half=True)
 
         key = cv.waitKey(10)
         if key == 27:  # ESC
             break
-        elif key == 107: #k
+        elif key == 107:  # k
             lockin = True
 
         for result in results:
             for box in result.boxes:
-                pixel_width = float(box.xyxy[0][2])-float(box.xyxy[0][0])
+                pixel_width = float(box.xyxy[0][2]) - float(box.xyxy[0][0])
                 if wanna_hit == classifications[int(box.cls[0])] and lockin:
                     distance = distance_to_camera(KNOWN_WIDTH, CALIBRATED_FOCAL_LENGTH, pixel_width)
-                    ratio = pixel_width*2/KNOWN_WIDTH
-                    mid_point = box.xyxy[0][0]+pixel_width/2
-                    point_to_can(mid_point, distance, distance*ratio)
+                    ratio = pixel_width/KNOWN_WIDTH
+                    mid_point = box.xyxy[0][0] + pixel_width / 2
+                    point_to_can(mid_point, distance, distance * ratio)
                     print("TARGET SPOTTED " + str(distance) + " AWAY")
                     lockin = False
 
@@ -105,14 +106,14 @@ def rotate_servo(pin, angle):
 
 # make it so take distance to create angle
 def get_shot_angle(distance):
-    CALIBRATION_CONST = 70
-    degrees = 45*(distance/CALIBRATION_CONST)
-    adjust = 180-degrees
+    CALIBRATION_CONST = 90
+    degrees = 45 * (distance / CALIBRATION_CONST)
+    adjust = 180 - degrees
     rotate_servo(5, adjust)
 
 
 def point_to_can(x_pos, dist, dist_in_pixels):
-    dist_from_mid = 1000-x_pos
+    dist_from_mid = 900 - x_pos
 
     angle = math.degrees(math.atan(dist_from_mid/dist_in_pixels))
     print("XPOS")
@@ -140,6 +141,7 @@ def recalibrate_servo():
     rotate_servo(5, 180)
 
 
+# MAIN PROGRAM ############################################################
 board = Arduino('COM3')
 DEGREE_TO_STEP_CONV = (2038 * 2) / 360
 reader = pyfirmata.util.Iterator(board)  # reads inputs of the circuit
@@ -148,31 +150,7 @@ reader.start()
 motor = StepperLib.Stepper(2038, board, reader, 11, 10, 9, 8)
 motor.set_speed(100000)
 
+# point_to_can(900,30,460)
 main()
 
 recalibrate_servo()
-
-#### WEB APP THAT WILL NEVER HAPPEN ##############
-
-# stylekit = {
-#     "color_primary": "#889696",
-#     "color_secondary": "#B8BDB5",
-#     "color_background_light": "#D2D4C8",
-#     "color_background_dark": "#5F7470",
-# }
-#
-# value = ""
-#
-# page = """
-# <|container container-styling|
-# #The CAN-non
-# <|layout|columns=1|
-# <|{value}|selector|lov=sevenUp;DrPepper;Pepsi;Roa|>
-#
-# <|LAUNCH|button|class_name=plain|on_action=main|>
-# |>
-# |>
-# """
-#
-#
-# Gui(page).run(use_reloader=True, port=5090, stylekit=stylekit)

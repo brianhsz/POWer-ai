@@ -1,4 +1,3 @@
 ultralytics==8.0.134
 opencv-python==4.7.0.72
 pyfirmata==1.1.0
-taipy==3.0.0
