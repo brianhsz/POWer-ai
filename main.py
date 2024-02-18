@@ -2,8 +2,11 @@ import cv2 as cv
 import argparse
 
 from ultralytics import YOLO
-from pyfirmata import Arduino
-import time
+import pyfirmata
+from pyfirmata import Arduino, SERVO
+from time import sleep
+import StepperLib
+import math
 
 
 def get_args():
@@ -33,7 +36,10 @@ def distance_to_camera(known_width, focal_length, per_width):
 
 
 def main():
-    CALIBRATED_FOCAL_LENGTH = 1670
+    # THIS IS WHAT YOU WANNA HIT ##########
+    WANNA_HIT = '7up'
+
+    CALIBRATED_FOCAL_LENGTH = 230
     KNOWN_WIDTH = 35.0
 
     # Argument parsing #################################################################
@@ -43,36 +49,35 @@ def main():
     cap_width = args.width
     cap_height = args.height
 
-    use_static_image_mode = args.use_static_image_mode
-    min_detection_confidence = args.min_detection_confidence
-    min_tracking_confidence = args.min_tracking_confidence
-
     # Load an official or custom model
     model = YOLO('best.pt')  # Load an official Detect model
 
     # Perform tracking with the model
-
-    cap = cv.VideoCapture(cap_device)
+    cap = cv.VideoCapture(0)
     cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
 
+    classifications = {0: '7up',
+                       1: 'DrPepper',
+                       2: 'Pepsi',
+                       3: 'Zoa'}
+
     while True:
-        # CAMERA #
         ret, image = cap.read()
         if not ret:
             break
         img = cv.flip(image, 1)  # Mirror display
 
         # DETECTION #
-        results = model.predict(img, conf=0.5, verbose=False)
-
-        distances = []
+        results = model.predict(img, conf=0.5, imgsz = 640, verbose=False, half=True)
 
         for result in results:
-            for box in result.boxes.xyxy:
-                pixel_width = float(box[2])-float(box[0])
-
-                distance = distance_to_camera(KNOWN_WIDTH, CALIBRATED_FOCAL_LENGTH, pixel_width)
+            for box in result.boxes:
+                pixel_width = float(box.xyxy[0][2])-float(box.xyxy[0][0])
+                if WANNA_HIT == classifications[int(box.cls[0])]:
+                    distance = distance_to_camera(KNOWN_WIDTH, CALIBRATED_FOCAL_LENGTH, pixel_width)
+                    # point_to_can(float(box.xyxy[0][0]), distance)
+                    print("TARGET SPOTTED " + str(distance) + " AWAY")
 
         annotated_frame = results[0].plot()
 
@@ -84,11 +89,33 @@ def main():
     cv.destroyAllWindows()
 
 
-# board = Arduino('COM3')
-# while True:
-#     board.digital[13].write(1)
-#     time.sleep(1)
-#     board.digital[13].write(0)
-#     time.sleep(1)
+def rotate_servo(pin, angle):
+    board.digital[pin].write(angle)
+    sleep(0.015)
+
+
+# make it so take distance to create angle
+def get_shot_angle(distance):
+    degrees=0 #implement later
+    adjust = 180-degrees
+    rotate_servo(5, adjust)
+
+
+def point_to_can(x_pos,dist):
+    # implement this later
+    DEGREE_TO_STEP_CONV = (2038 * 2) / 360
+    board = Arduino('COM3')
+    reader = pyfirmata.util.Iterator(board)  # reads inputs of the circuit
+    reader.start()
+
+    motor = StepperLib.Stepper(2038, board, reader, 11, 10, 9, 8)
+    motor.set_speed(100000)
+
+    motor.step(90 * DEGREE_TO_STEP_CONV)
+
+    get_shot_angle(dist)
+    return True
+
 
 main()
+
